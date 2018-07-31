@@ -40,6 +40,9 @@ contract('Option', (accounts) => {
     xit('should not allow exercise before deposit', async () => {
     });
 
+    xit('should not accept a deposit of ETH greater than the depositAmount', async () => {
+    });
+
     it('should allow writer to make deposit', async () => {
       // deposit 10 ETH
       await option.deposit({ value: deposit, from: writer });
@@ -84,6 +87,9 @@ contract('Option', (accounts) => {
       option = await Option.new(holder, depositCurrency.address, settlementCurrency.address, 5000, 8000, expiration, { from: writer });
     });
 
+    xit('should not take a deposit allowance larger than the depositAmount', async () => {
+    });
+
     it('should allow writer to make deposit', async () => {
       // deposit 5000 token A
       await depositCurrency.approve(option.address, 5000, { from: writer });
@@ -109,8 +115,15 @@ contract('Option', (accounts) => {
     });
   });
 
-  context('multi-part deposit', () => {
+  context('default constructor', () => {
+    xit('should create a class', async () => {
+    });
 
+    xit('should allow initialization', async () => {
+    });
+  });
+
+  context('multi-part deposit', () => {
     xit('should allow non-writer to make deposit', async () => {
     });
 
@@ -118,21 +131,57 @@ contract('Option', (accounts) => {
     });
   });
 
-  context('totally expired option', () => {
+  context('send ERC20 deposit with transfer', () => {
+    xit('it should allow deposit through transfer', async () => {
+    });
+  });
 
+  context('send ERC20 before exercise with transfer', () => {
+    xit('it should allow deposit through transfer', async () => {
+    });
+  });
+
+  context('deposit should not take more than the settlementAmount when the ETH sent exceeds it', () => {
+    // should check existing balance in mult-part deposit scenario
+  });
+
+  context('deposit should not take more than the settlementAmount when the ERC20 allowance exceeds it', () => {
+    // should check existing balance in mult-part deposit scenario
+  });
+
+  context('exercise should not take more than the settlementAmount when the ERC20 allowance exceeds it', () => {
+    // should check existing balance in mult-part deposit scenario
+
+    // allow for existing ERC20 balance through transfer instead of allowance
+  });
+
+  context('option expires before deposit complete', () => {
+    xit('should allow writer to recover funds', async () => {
+    });
+  });
+
+  context('totally expired option', () => {
     xit('should allow writer to recover unexercised funds', async () => {
     });
   });
 
   context('partially exercised option which expires', () => {
-
     xit('should allow writer to recover unexercised funds', async () => {
     });
   });
 
   context('partially funded option', () => {
-
     xit('should allow writer to cancel', async () => {
+    });
+  });
+
+  context('check for numerical and rounding difficulties', () => {
+    xit('should handle zero settlement amount', async () => {
+      // settlementAmount = 3
+    });
+
+    xit('should handle remainders', async () => {
+      // allowance = 1, depositAmount = 2, settlementAmount = 3
     });
   });
 });

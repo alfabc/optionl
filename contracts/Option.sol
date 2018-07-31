@@ -13,6 +13,8 @@ contract Option {
   uint256 settlementAmount; // amount of settlement requested by the seller
   uint256 expiration; // time at which option expires
 
+  // create a new option, sending in the parameters
+  // The caller is the writer, by definition
   constructor(
     address _holder,
     address _depositContract,
@@ -32,6 +34,11 @@ contract Option {
 
   event Deposit(address sender, uint256 value);
 
+  // Called by the writer (or other) to fund the option with the
+  // deposit currency.
+  // When the deposit currency is ETH it should be sent as the value.
+  // When the deposit currency is ERC-20 it should be `approve`d for
+  // the contract first.
   function deposit() public payable {
     if (depositContract == 0 ) {
       emit Deposit(msg.sender, msg.value);
@@ -43,6 +50,9 @@ contract Option {
     }
   }
 
+  // called by the holder to give the settlement and take the deposit
+  // requires that the option be fully deposited
+  // and that the holder has made an allowance of the settlement currency
   function exercise() public {
     ERC20 settlementCurrency = ERC20(settlementContract);
     // Find out how many of the settlement tokens have been allowed by the holder
