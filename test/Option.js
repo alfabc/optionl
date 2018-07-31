@@ -3,7 +3,7 @@
 /* eslint prefer-const: 0 */
 const Option = artifacts.require('../contracts/Option.sol');
 const MockERC20 = artifacts.require('../contracts/mocks/MockERC20.sol');
-//const expectThrow = require('./helpers/expectThrow.js');
+// const expectThrow = require('./helpers/expectThrow.js');
 const BigNumber = require('bignumber.js');
 const latestTime = require('./helpers/latest-time');
 const { increaseTimeTo, duration } = require('./helpers/increase-time');
@@ -22,8 +22,6 @@ contract('Option', (accounts) => {
   context('offer ETH for ERC20 token', () => {
     let option;
     let settlementCurrency;
-    let originalWriterBalance = web3.eth.getBalance(writer);
-    let originalHolderBalance = web3.eth.getBalance(holder);
     const deposit = new web3.BigNumber(web3.toWei(10, 'ether'));
 
     it('should set up ERC20 token', async () => {
@@ -45,9 +43,9 @@ contract('Option', (accounts) => {
     it('exercise option', async () => {
       await settlementCurrency.approve(option.address, 10000, { from: holder });
       const holderBalanceBefore = web3.eth.getBalance(holder);
-      var result = await option.exercise({ from: holder });
+      let result = await option.exercise({ from: holder });
       const tx = await web3.eth.getTransaction(result.tx);
-      const gasCost = tx.gasPrice.mul(result.receipt.gasUsed)
+      const gasCost = tx.gasPrice.mul(result.receipt.gasUsed);
       // ETH balance for the holder should have increased (minus gas costs)
       web3.eth.getBalance(holder).should.be.bignumber.equal(holderBalanceBefore.plus(deposit.minus(gasCost)));
       // token balances should have shifted
@@ -62,6 +60,7 @@ contract('Option', (accounts) => {
   context('offer ERC20 tokens for ERC20 tokens', () => {
     let depositCurrency;
     let settlementCurrency;
+    let option;
 
     it('should set up ERC20 tokens', async () => {
       // allocate 5k tokens to the writer
@@ -83,7 +82,15 @@ contract('Option', (accounts) => {
       (await depositCurrency.balanceOf(option.address)).toNumber().should.be.equal(5000);
     });
 
-    xit('writer requests money back', async () => {
+    it('exercise option', async () => {
+      await settlementCurrency.approve(option.address, 8000, { from: holder });
+      await option.exercise({ from: holder });
+      // token balances should have shifted
+      (await depositCurrency.balanceOf(option.address)).toNumber().should.be.equal(0);
+      (await depositCurrency.balanceOf(writer)).toNumber().should.be.equal(0);
+      (await depositCurrency.balanceOf(holder)).toNumber().should.be.equal(5000);
+      (await settlementCurrency.balanceOf(writer)).toNumber().should.be.equal(8000);
+      (await settlementCurrency.balanceOf(holder)).toNumber().should.be.equal(0);
     });
 
     xit('should not be able to get the money back again', async () => {

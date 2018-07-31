@@ -32,7 +32,7 @@ contract Option {
 
   event Deposit(address sender, uint256 value);
 
-  function deposit() payable public {
+  function deposit() public payable {
     if (depositContract == 0 ) {
       emit Deposit(msg.sender, msg.value);
     } else {
