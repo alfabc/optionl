@@ -6,7 +6,7 @@ const MockERC20 = artifacts.require('../contracts/mocks/MockERC20.sol');
 const expectThrow = require('./helpers/expectThrow.js');
 const BigNumber = require('bignumber.js');
 const latestTime = require('./helpers/latest-time');
-const { increaseTimeTo, duration } = require('./helpers/increase-time');
+const { increaseTimeTo, duration } = require('./helpers/increase-time'); // eslint-disable-line no-unused-vars
 const should = require('chai') // eslint-disable-line no-unused-vars
   .use(require('chai-as-promised'))
   .use(require('chai-bignumber')(BigNumber))
