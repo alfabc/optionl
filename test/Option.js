@@ -30,11 +30,17 @@ contract('Option', (accounts) => {
       (await settlementCurrency.balanceOf(holder)).toNumber().should.be.equal(10000);
     });
 
-    it('send option', async () => {
+    it('should allow writer to create option', async () => {
       // expires in 90 days
       const expiration = (await latestTime()) + duration.days(90);
       // writer deposits 10 ETH, expects 10000 tokens
       option = await Option.new(holder, 0, settlementCurrency.address, 10, 10000, expiration, { from: writer });
+    });
+
+    it('should not allow exercise before deposit', async () => {
+    }
+
+    it('should allow writer to make deposit', async () => {
       // deposit 10 ETH
       await option.deposit({ value: deposit, from: writer });
       web3.eth.getBalance(option.address).should.be.bignumber.equal(deposit);
@@ -76,10 +82,16 @@ contract('Option', (accounts) => {
       const expiration = (await latestTime()) + duration.days(30);
       // writer deposits 5k token A, expects 8k token B
       option = await Option.new(holder, depositCurrency.address, settlementCurrency.address, 5000, 8000, expiration, { from: writer });
+    });
+
+    it('should allow writer to make deposit', async () => {
       // deposit 5000 token A
       await depositCurrency.approve(option.address, 5000, { from: writer });
       await option.deposit({ from: writer });
       (await depositCurrency.balanceOf(option.address)).toNumber().should.be.equal(5000);
+    });
+
+    it('should not let anyone but holder exercise', async () => {
     });
 
     it('exercise option', async () => {
@@ -94,6 +106,15 @@ contract('Option', (accounts) => {
     });
 
     xit('should not be able to get the money back again', async () => {
+    });
+  });
+
+  context('another case', () => {
+
+    xit('should allow non-writer to make deposit', async () => {
+    });
+
+    xit('should happen', async () => {
     });
   });
 });
