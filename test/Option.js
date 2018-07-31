@@ -115,11 +115,40 @@ contract('Option', (accounts) => {
     });
   });
 
-  context('multi-part deposit', () => {
-    xit('should allow non-writer to make deposit', async () => {
+  context('multi-part ETH deposit', () => {
+    xit('should allow non-writer to make ETH deposit', async () => {
     });
 
-    xit('should happen', async () => {
+    xit('should allow writer to make ETH deposit', async () => {
+    });
+  });
+
+  context('multi-part ERC20 deposit', () => {
+    xit('should allow non-writer to make ERC20 deposit', async () => {
+    });
+
+    xit('should allow writer to make ERC20 deposit', async () => {
+    });
+  });
+
+  context('do not allow ETH deposit for uninitialized contract', () => {
+    // specifically necessary for the first deployed contract
+    // which will have all 0 parameters
+    xit('should reject ETH value when not contract not initialized properly', async () => {
+    });
+
+    xit('should reject deposit call for uninitialized contract', async () => {
+    });
+  });
+
+  context('send ETH deposit with constructor', () => {
+    xit('it should allow ETH sent in constructor', async () => {
+    });
+
+    xit('it should not allow ETH for ERC20 deposits', async () => {
+    });
+
+    xit('it should update state accordingly', async () => {
     });
   });
 
