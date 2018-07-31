@@ -59,17 +59,17 @@ contract Option {
     uint256 allowance = settlementCurrency.allowance(holder, address(this));
 
     ERC20 depositCurrency = ERC20(depositContract);
-    uint256 depositAmount = 0;
+    uint256 remainingDepositAmount = 0;
     
     // Find out how much of the deposit remains
     // ETH has no contract
     if (depositContract == 0 ) {
-      depositAmount = address(this).balance;
+      remainingDepositAmount = address(this).balance;
     } else {
-      depositAmount = depositCurrency.balanceOf(address(this));
+      remainingDepositAmount = depositCurrency.balanceOf(address(this));
     }
 
-    uint256 exerciseAmount = allowance * depositAmount / settlementAmount;
+    uint256 exerciseAmount = allowance * remainingDepositAmount / settlementAmount;
 
     if (depositContract == 0 ) {
       // send the ETH to the holder
