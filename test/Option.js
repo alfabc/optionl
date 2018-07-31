@@ -115,14 +115,6 @@ contract('Option', (accounts) => {
     });
   });
 
-  context('default constructor', () => {
-    xit('should create a class', async () => {
-    });
-
-    xit('should allow initialization', async () => {
-    });
-  });
-
   context('multi-part deposit', () => {
     xit('should allow non-writer to make deposit', async () => {
     });
