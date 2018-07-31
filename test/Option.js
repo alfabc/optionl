@@ -37,8 +37,8 @@ contract('Option', (accounts) => {
       option = await Option.new(holder, 0, settlementCurrency.address, 10, 10000, expiration, { from: writer });
     });
 
-    it('should not allow exercise before deposit', async () => {
-    }
+    xit('should not allow exercise before deposit', async () => {
+    });
 
     it('should allow writer to make deposit', async () => {
       // deposit 10 ETH
@@ -91,7 +91,7 @@ contract('Option', (accounts) => {
       (await depositCurrency.balanceOf(option.address)).toNumber().should.be.equal(5000);
     });
 
-    it('should not let anyone but holder exercise', async () => {
+    xit('should not let anyone but holder exercise', async () => {
     });
 
     it('exercise option', async () => {
@@ -109,7 +109,7 @@ contract('Option', (accounts) => {
     });
   });
 
-  context('another case', () => {
+  context('multi-part deposit', () => {
 
     xit('should allow non-writer to make deposit', async () => {
     });
