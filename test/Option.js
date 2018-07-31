@@ -88,9 +88,6 @@ contract('Option', (accounts) => {
       option = await Option.new(holder, depositCurrency.address, settlementCurrency.address, 5000, 8000, expiration, { from: writer });
     });
 
-    xit('should not take a deposit allowance larger than the depositAmount', async () => {
-    });
-
     it('should allow writer to make deposit', async () => {
       // deposit 5000 token A
       await depositCurrency.approve(option.address, 5000, { from: writer });
@@ -129,6 +126,9 @@ contract('Option', (accounts) => {
 
     xit('should allow writer to make ETH deposit', async () => {
     });
+
+    xit('should reject ETH in excess of depositAmount', async () => {
+    });
   });
 
   context('multi-part ERC20 deposit', () => {
@@ -136,6 +136,9 @@ contract('Option', (accounts) => {
     });
 
     xit('should allow writer to make ERC20 deposit', async () => {
+    });
+
+    xit('should not take a deposit allowance larger than the depositAmount', async () => {
     });
 
     xit('should not allow writer to send ETH with ERC20 deposit', async () => {
