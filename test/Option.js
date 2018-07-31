@@ -46,7 +46,7 @@ contract('Option', (accounts) => {
       web3.eth.getBalance(option.address).should.be.bignumber.equal(deposit);
     });
 
-    it('exercise option', async () => {
+    it('should allow holder to exercise option', async () => {
       await settlementCurrency.approve(option.address, 10000, { from: holder });
       const holderBalanceBefore = web3.eth.getBalance(holder);
       let result = await option.exercise({ from: holder });
@@ -77,7 +77,7 @@ contract('Option', (accounts) => {
       (await settlementCurrency.balanceOf(holder)).toNumber().should.be.equal(8000);
     });
 
-    it('send option', async () => {
+    it('should allow writer to create option', async () => {
       // expires in 30 days
       const expiration = (await latestTime()) + duration.days(30);
       // writer deposits 5k token A, expects 8k token B
@@ -91,7 +91,7 @@ contract('Option', (accounts) => {
       (await depositCurrency.balanceOf(option.address)).toNumber().should.be.equal(5000);
     });
 
-    xit('should not let anyone but holder exercise', async () => {
+    xit('should not let anyone but holder to exercise', async () => {
     });
 
     it('should allow the holder to exercise the option', async () => {
@@ -119,9 +119,20 @@ contract('Option', (accounts) => {
   });
 
   context('totally expired option', () => {
+
+    xit('should allow writer to recover unexercised funds', async () => {
+    });
   });
 
   context('partially exercised option which expires', () => {
+
+    xit('should allow writer to recover unexercised funds', async () => {
+    });
   });
 
+  context('partially funded option', () => {
+
+    xit('should allow writer to cancel', async () => {
+    });
+  });
 });
