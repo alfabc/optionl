@@ -3,7 +3,7 @@
 /* eslint prefer-const: 0 */
 const Option = artifacts.require('../contracts/Option.sol');
 const MockERC20 = artifacts.require('../contracts/mocks/MockERC20.sol');
-// const expectThrow = require('./helpers/expectThrow.js');
+const expectThrow = require('./helpers/expectThrow.js');
 const BigNumber = require('bignumber.js');
 const latestTime = require('./helpers/latest-time');
 const { increaseTimeTo, duration } = require('./helpers/increase-time');
@@ -15,6 +15,7 @@ const should = require('chai') // eslint-disable-line no-unused-vars
 contract('Option', (accounts) => {
   const writer = accounts[0];
   const holder = accounts[1];
+  const rando = accounts[2];
 
   before(async () => {
   });
@@ -62,7 +63,7 @@ contract('Option', (accounts) => {
       (await settlementCurrency.balanceOf(writer)).toNumber().should.be.equal(10000);
     });
 
-    xit('should not be able to exercise the same option twice', async () => {
+    xit('should not be able to exceed the option', async () => {
     });
   });
 
@@ -97,11 +98,18 @@ contract('Option', (accounts) => {
       (await depositCurrency.balanceOf(option.address)).toNumber().should.be.equal(5000);
     });
 
-    xit('should not let anyone but holder to exercise', async () => {
+    // holder approves ERC20
+    it('should let holder approve ERC20', async () => {
+      // just a test case for convenience -- needs to be before next two cases
+      await settlementCurrency.approve(option.address, 8000, { from: holder });
+    });
+
+    it('should not let anyone but holder to exercise', async () => {
+      await expectThrow(option.exercise({ from: writer }));
+      await expectThrow(option.exercise({ from: rando }));
     });
 
     it('should allow the holder to exercise the option', async () => {
-      await settlementCurrency.approve(option.address, 8000, { from: holder });
       await option.exercise({ from: holder });
       // token balances should have shifted
       (await depositCurrency.balanceOf(option.address)).toNumber().should.be.equal(0);
@@ -128,6 +136,9 @@ contract('Option', (accounts) => {
     });
 
     xit('should allow writer to make ERC20 deposit', async () => {
+    });
+
+    xit('should not allow writer to send ETH with ERC20 deposit', async () => {
     });
   });
 

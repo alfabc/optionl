@@ -54,6 +54,9 @@ contract Option {
   // requires that the option be fully deposited
   // and that the holder has made an allowance of the settlement currency
   function exercise() public {
+    // Only holder may call
+    require(msg.sender == holder);
+
     ERC20 settlementCurrency = ERC20(settlementContract);
     // Find out how many of the settlement tokens have been allowed by the holder
     uint256 allowance = settlementCurrency.allowance(holder, address(this));
