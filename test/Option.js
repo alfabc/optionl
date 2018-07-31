@@ -94,7 +94,7 @@ contract('Option', (accounts) => {
     xit('should not let anyone but holder exercise', async () => {
     });
 
-    it('exercise option', async () => {
+    it('should allow the holder to exercise the option', async () => {
       await settlementCurrency.approve(option.address, 8000, { from: holder });
       await option.exercise({ from: holder });
       // token balances should have shifted
@@ -117,4 +117,11 @@ contract('Option', (accounts) => {
     xit('should happen', async () => {
     });
   });
+
+  context('totally expired option', () => {
+  });
+
+  context('partially exercised option which expires', () => {
+  });
+
 });
