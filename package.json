@@ -1,0 +1,49 @@
+{
+  "name": "derimon",
+  "version": "2.0.0",
+  "description": "derimon derivative contracts",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "bignumber.js": "^7.2.1",
+    "openzeppelin-solidity": "^1.11.0",
+    "web3": "^1.0.0-beta.35"
+  },
+  "devDependencies": {
+    "babel-preset-env": "^1.7.0",
+    "chai": "^4.1.2",
+    "chai-as-promised": "^7.1.1",
+    "chai-bignumber": "^2.0.2",
+    "coveralls": "^3.0.1",
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.13.0",
+    "sol-merger": "^0.1.2",
+    "solc": "^0.4.24",
+    "solium": "^1.1.7",
+    "truffle": "^4.1.13",
+    "webpack": "^4.13.0"
+  },
+  "scripts": {
+    "build": "./node_modules/.bin/truffle compile",
+    "build-contracts": "mkdir -p ./build/merged ; ./node_modules/.bin/sol-merger './contracts/*.sol' ./build/merged",
+    "coverage": "./node_modules/.bin/solidity-coverage",
+    "deploy-ropsten": "./node_modules/.bin/truffle migrate --network ropsten",
+    "deploy-ganache": "./node_modules/.bin/truffle migrate --network ganache",
+    "solium": "./node_modules/.bin/solium --dir contracts/",
+    "lint": "./node_modules/.bin/eslint .",
+    "test": "./node_modules/.bin/truffle test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alfabc/derimon.git"
+  },
+  "author": "",
+  "license": "AGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/alfabc/derimon/issues"
+  },
+  "homepage": "https://github.com/alfabc/derimon#readme"
+}
