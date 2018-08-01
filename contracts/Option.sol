@@ -55,7 +55,7 @@ contract Option {
   // and that the holder has made an allowance of the settlement currency
   function exercise() public {
     // Only holder may call
-    require(msg.sender == holder);
+    require(msg.sender == holder, "Sender not authorized");
 
     ERC20 settlementCurrency = ERC20(settlementContract);
     // Find out how many of the settlement tokens have been allowed by the holder
