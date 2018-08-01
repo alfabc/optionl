@@ -242,16 +242,6 @@ contract('Option', (accounts) => {
     });
   });
 
-  context('send ERC20 deposit with transfer', () => {
-    xit('it should allow deposit through transfer', async () => {
-    });
-  });
-
-  context('send ERC20 before exercise with transfer', () => {
-    xit('it should allow deposit through transfer', async () => {
-    });
-  });
-
   context('deposit should not take more than the settlementAmount when the ETH sent exceeds it', () => {
     // should check existing balance in mult-part deposit scenario
   });
