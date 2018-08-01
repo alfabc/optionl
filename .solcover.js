@@ -1,4 +1,4 @@
 module.exports = {
-    skipFiles: [],
-    copyNodeModules: true
+  copyPackages:  ['zeppelin-solidity'],
+  skipFiles: ['mocks/']
 };
