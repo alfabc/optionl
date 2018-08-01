@@ -89,7 +89,39 @@ contract('Option', (accounts) => {
     });
   });
 
-  context('offer ERC20 tokens for ERC20 tokens', () => {
+  context('simple ERC20 tokens for ERC20 tokens', () => {
+    it('should work with only ERC20.approve', async () => {
+      const depositToken = await MockERC20.new(writer, 1000);
+      const settlementToken = await MockERC20.new(holder, 2000);
+      const expiration = (await latestTime()) + duration.days(30);
+      const option = await Option.new(holder, depositToken.address, settlementToken.address, 1000, 2000, expiration, { from: writer });
+      await depositToken.approve(option.address, 1000, { from: writer });
+      await option.deposit({ from: writer });
+      await settlementToken.approve(option.address, 2000, { from: holder });
+      await option.exercise({ from: holder });
+      (await depositToken.balanceOf(writer)).toNumber().should.be.equal(0);
+      (await depositToken.balanceOf(holder)).toNumber().should.be.equal(1000);
+      (await settlementToken.balanceOf(writer)).toNumber().should.be.equal(2000);
+      (await settlementToken.balanceOf(holder)).toNumber().should.be.equal(0);
+    });
+
+    it('should work with only ERC20.transfer', async () => {
+      const depositToken = await MockERC20.new(writer, 1000);
+      const settlementToken = await MockERC20.new(holder, 2000);
+      const expiration = (await latestTime()) + duration.days(30);
+      const option = await Option.new(holder, depositToken.address, settlementToken.address, 1000, 2000, expiration, { from: writer });
+      await depositToken.transfer(option.address, 1000, { from: writer });
+      await option.deposit({ from: writer });
+      await settlementToken.transfer(option.address, 2000, { from: holder });
+      await option.exercise({ from: holder });
+      (await depositToken.balanceOf(writer)).toNumber().should.be.equal(0);
+      (await depositToken.balanceOf(holder)).toNumber().should.be.equal(1000);
+      (await settlementToken.balanceOf(writer)).toNumber().should.be.equal(2000);
+      (await settlementToken.balanceOf(holder)).toNumber().should.be.equal(0);
+    });
+  });
+
+  context('complex ERC20 tokens for ERC20 tokens', () => {
     let depositToken;
     let settlementToken;
     let option;
@@ -123,14 +155,17 @@ contract('Option', (accounts) => {
       (await depositToken.balanceOf(option.address)).toNumber().should.be.equal(1000);
     });
 
-    it('should allow non-writer to deposit with ERC20.approve', async () => {
-      // deposit 2000 token A
-      await depositToken.approve(option.address, 2000, { from: rando });
-      await option.deposit({ from: rando });
-      (await depositToken.balanceOf(option.address)).toNumber().should.be.equal(3000);
+    it('should allow for deposit of funds sent via ERC20.transfer', async () => {
+      // deposit 1000 token A
+      await depositToken.transfer(option.address, 1000, { from: rando });
+      (await depositToken.balanceOf(option.address)).toNumber().should.be.equal(2000);
     });
 
-    xit('should allow for funds arrived via ERC20.transfer', async () => {
+    it('should allow non-writer to deposit with ERC20.approve', async () => {
+      // deposit 1000 token A
+      await depositToken.approve(option.address, 1000, { from: rando });
+      await option.deposit({ from: rando });
+      (await depositToken.balanceOf(option.address)).toNumber().should.be.equal(3000);
     });
 
     it('should only take remaining depositAmount from allowance', async () => {
@@ -151,10 +186,12 @@ contract('Option', (accounts) => {
       (await depositToken.balanceOf(option.address)).toNumber().should.be.equal(5000);
     });
 
-    // holder approves ERC20
-    it('should let holder approve ERC20', async () => {
-      // just a test case for convenience -- needs to be before next two cases
-      await settlementToken.approve(option.address, 8000, { from: holder });
+    it('should let holder send via ERC20.transfer', async () => {
+      await settlementToken.transfer(option.address, 3000, { from: holder });
+    });
+
+    it('should let holder send via ERC20.approve', async () => {
+      await settlementToken.approve(option.address, 5000, { from: holder });
     });
 
     it('should not let anyone but holder to exercise', async () => {

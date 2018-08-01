@@ -78,10 +78,6 @@ contract Option {
     // Only holder may call
     require(msg.sender == holder, "Sender not authorized");
 
-    ERC20 settlementCurrency = ERC20(settlementContract);
-    // Find out how many of the settlement tokens have been allowed by the holder
-    uint256 allowance = settlementCurrency.allowance(holder, address(this));
-
     ERC20 depositCurrency = ERC20(depositContract);
     uint256 remainingDepositAmount = 0;
     
@@ -95,7 +91,11 @@ contract Option {
 
     require(remainingDepositAmount > 0, "already exercised");
 
-    uint256 exerciseAmount = allowance * remainingDepositAmount / settlementAmount;
+    ERC20 settlementCurrency = ERC20(settlementContract);
+    // Find out how many of the settlement tokens have been allowed by the holder
+    uint256 allowance = settlementCurrency.allowance(holder, address(this));
+    uint256 balance = settlementCurrency.balanceOf(address(this));
+    uint256 exerciseAmount = (allowance + balance) * remainingDepositAmount / settlementAmount;
 
     if (depositContract == 0 ) {
       // send the ETH to the holder
@@ -106,6 +106,11 @@ contract Option {
     }
 
     // send the tokens to the writer
-    settlementCurrency.transferFrom(holder, writer, allowance);
+    if (allowance > 0) {
+      settlementCurrency.transferFrom(holder, writer, allowance);
+    }
+    if (balance > 0) {
+      settlementCurrency.transfer(writer, balance);
+    }
   }
 }
