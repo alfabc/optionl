@@ -186,9 +186,6 @@ contract('Option', (accounts) => {
     xit('it should allow ETH sent in constructor', async () => {
     });
 
-    xit('it should not allow ETH for ERC20 deposits', async () => {
-    });
-
     xit('it should update state accordingly', async () => {
     });
   });

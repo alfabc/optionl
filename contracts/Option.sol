@@ -47,7 +47,7 @@ contract Option {
       require(address(this).balance <= depositAmount, "depositAmount exceeded");
       newBalance = address(this).balance;
     } else {
-      require(msg.value == 0, "deposit to ERC20 depositContract");
+      require(msg.value == 0, "ERC20 only depositContract");
       ERC20 depositCurrency = ERC20(depositContract);
       uint256 allowance = depositCurrency.allowance(msg.sender, address(this));
       // Get the current deposit, which may include ERC20.transfer amounts
