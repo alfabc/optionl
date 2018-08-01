@@ -1,7 +1,7 @@
 {
-  "name": "derimon",
+  "name": "optionl",
   "version": "2.0.0",
-  "description": "derimon derivative contracts",
+  "description": "optionl derivative contracts",
   "main": "truffle-config.js",
   "directories": {
     "test": "test"
@@ -39,12 +39,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/alfabc/derimon.git"
+    "url": "git+https://github.com/alfabc/optionl.git"
   },
   "author": "",
   "license": "AGPL-3.0",
   "bugs": {
-    "url": "https://github.com/alfabc/derimon/issues"
+    "url": "https://github.com/alfabc/optionl/issues"
   },
-  "homepage": "https://github.com/alfabc/derimon#readme"
+  "homepage": "https://github.com/alfabc/optionl#readme"
 }
