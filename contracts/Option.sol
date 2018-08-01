@@ -22,7 +22,7 @@ contract Option {
     address _settlementContract,
     uint256 _depositAmount,
     uint256 _settlementAmount,
-    uint256 _expiration) public {
+    uint256 _expiration) public payable {
 
     writer = msg.sender;
     holder = _holder;
@@ -32,6 +32,10 @@ contract Option {
     settlementAmount = _settlementAmount;
     expiration = _expiration;
     funded = false;
+
+    if (msg.value > 0) {
+      deposit();
+    }
   }
 
   // Called by the writer (or anyone) to fund the option with the

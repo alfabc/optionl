@@ -16,6 +16,7 @@ contract('Option', (accounts) => {
   const writer = accounts[0];
   const holder = accounts[1];
   const rando = accounts[2];
+  const tenETH = new web3.BigNumber(web3.toWei(10, 'ether'));
 
   before(async () => {
   });
@@ -23,7 +24,7 @@ contract('Option', (accounts) => {
   context('offer ETH for ERC20 token', () => {
     let option;
     let settlementCurrency;
-    const deposit = new web3.BigNumber(web3.toWei(10, 'ether'));
+    const deposit = tenETH;
 
     it('should set up ERC20 token', async () => {
       // allocate 11k tokens to the holder; 10k for the settlement,
@@ -183,10 +184,24 @@ contract('Option', (accounts) => {
   });
 
   context('send ETH deposit with constructor', () => {
-    xit('it should allow ETH sent in constructor', async () => {
+    let settlementCurrency;
+    let expiration;
+
+    it('it should allow ETH sent in constructor', async () => {
+      settlementCurrency = await MockERC20.new(holder, 1000);
+      expiration = (await latestTime()) + duration.days(30);
+      let option = await Option.new(holder, 0, settlementCurrency.address, tenETH, 100, expiration, { from: writer, value: tenETH });
+      await settlementCurrency.approve(option.address, 100, { from: holder });
+      await option.exercise({ from: holder });
     });
 
-    xit('it should update state accordingly', async () => {
+    it('but it should allow *excess* ETH sent in constructor', async () => {
+      await expectThrow(Option.new(holder, 0, settlementCurrency.address, tenETH, 100, expiration, { from: writer, value: tenETH.mul(2) }));
+    });
+
+    it('nor should it allow ETH sent in constructor when deposit currency is ERC20', async () => {
+      let depositCurrency = await MockERC20.new(writer, 1000);
+      await expectThrow(Option.new(holder, depositCurrency.address, settlementCurrency.address, 100, 100, expiration, { from: writer, value: tenETH }));
     });
   });
 
