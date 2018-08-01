@@ -89,6 +89,8 @@ contract Option {
       remainingDepositAmount = depositCurrency.balanceOf(address(this));
     }
 
+    require(remainingDepositAmount > 0, "already exercised");
+
     uint256 exerciseAmount = allowance * remainingDepositAmount / settlementAmount;
 
     if (depositContract == 0 ) {

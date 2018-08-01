@@ -26,9 +26,10 @@ contract('Option', (accounts) => {
     const deposit = new web3.BigNumber(web3.toWei(10, 'ether'));
 
     it('should set up ERC20 token', async () => {
-      // allocate 10k tokens to the holder
-      settlementCurrency = await MockERC20.new(holder, 10000);
-      (await settlementCurrency.balanceOf(holder)).toNumber().should.be.equal(10000);
+      // allocate 11k tokens to the holder; 10k for the settlement,
+      // another 1k for test
+      settlementCurrency = await MockERC20.new(holder, 11000);
+      (await settlementCurrency.balanceOf(holder)).toNumber().should.be.equal(11000);
     });
 
     it('should allow writer to create option', async () => {
@@ -77,11 +78,13 @@ contract('Option', (accounts) => {
       // ETH balance for the holder should have increased (minus gas costs)
       web3.eth.getBalance(holder).should.be.bignumber.equal(holderBalanceBefore.plus(deposit.minus(gasCost)));
       // token balances should have shifted
-      (await settlementCurrency.balanceOf(holder)).toNumber().should.be.equal(0);
+      (await settlementCurrency.balanceOf(holder)).toNumber().should.be.equal(1000);
       (await settlementCurrency.balanceOf(writer)).toNumber().should.be.equal(10000);
     });
 
-    xit('should not be able to exceed the option', async () => {
+    it('should not be able to exceed the option', async () => {
+      await settlementCurrency.approve(option.address, 1000, { from: holder });
+      await expectThrow(option.exercise({ from: holder }));
     });
   });
 
@@ -166,9 +169,6 @@ contract('Option', (accounts) => {
       (await depositCurrency.balanceOf(holder)).toNumber().should.be.equal(5000);
       (await settlementCurrency.balanceOf(writer)).toNumber().should.be.equal(8000);
       (await settlementCurrency.balanceOf(holder)).toNumber().should.be.equal(0);
-    });
-
-    xit('should not be able to get the money back again', async () => {
     });
   });
 
