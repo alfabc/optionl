@@ -2,8 +2,7 @@ language: node_js
 node_js:
   - "9"
 install:
-  - npm install -g truffle solium
-  - npm install -g ganache-cli
+  - npm install -g truffle solium ganache-cli
   - npm install
 script:
   - npm run lint
