@@ -184,24 +184,24 @@ contract('Option', (accounts) => {
   });
 
   context('send ETH deposit with constructor', () => {
-    let settlementCurrency;
+    let settlementToken;
     let expiration;
 
     it('it should allow ETH sent in constructor', async () => {
-      settlementCurrency = await MockERC20.new(holder, 1000);
+      settlementToken = await MockERC20.new(holder, 1000);
       expiration = (await latestTime()) + duration.days(30);
-      let option = await Option.new(holder, 0, settlementCurrency.address, tenETH, 100, expiration, { from: writer, value: tenETH });
-      await settlementCurrency.approve(option.address, 100, { from: holder });
+      let option = await Option.new(holder, 0, settlementToken.address, tenETH, 100, expiration, { from: writer, value: tenETH });
+      await settlementToken.approve(option.address, 100, { from: holder });
       await option.exercise({ from: holder });
     });
 
     it('but it should allow *excess* ETH sent in constructor', async () => {
-      await expectThrow(Option.new(holder, 0, settlementCurrency.address, tenETH, 100, expiration, { from: writer, value: tenETH.mul(2) }));
+      await expectThrow(Option.new(holder, 0, settlementToken.address, tenETH, 100, expiration, { from: writer, value: tenETH.mul(2) }));
     });
 
     it('nor should it allow ETH sent in constructor when deposit currency is ERC20', async () => {
-      let depositCurrency = await MockERC20.new(writer, 1000);
-      await expectThrow(Option.new(holder, depositCurrency.address, settlementCurrency.address, 100, 100, expiration, { from: writer, value: tenETH }));
+      let depositToken = await MockERC20.new(writer, 1000);
+      await expectThrow(Option.new(holder, depositToken.address, settlementToken.address, 100, 100, expiration, { from: writer, value: tenETH }));
     });
   });
 
