@@ -12,6 +12,7 @@ contract Option {
   uint256 depositAmount; // amount of deposit placed by the seller
   uint256 settlementAmount; // amount of settlement requested by the seller
   uint256 expiration; // time at which option expires
+  bool funded;
 
   // create a new option, sending in the parameters
   // The caller is the writer, by definition
@@ -30,23 +31,30 @@ contract Option {
     depositAmount = _depositAmount;
     settlementAmount = _settlementAmount;
     expiration = _expiration;
+    funded = false;
   }
 
-  event Deposit(address sender, uint256 value);
-
-  // Called by the writer (or other) to fund the option with the
+  // Called by the writer (or anyone) to fund the option with the
   // deposit currency.
   // When the deposit currency is ETH it should be sent as the value.
   // When the deposit currency is ERC-20 it should be `approve`d for
   // the contract first.
   function deposit() public payable {
+    require(!funded, "already funded");
+    uint256 newBalance;
+
     if (depositContract == 0 ) {
-      emit Deposit(msg.sender, msg.value);
+      require(address(this).balance <= depositAmount, "depositAmount exceeded");
+      newBalance = address(this).balance;
     } else {
       ERC20 depositCurrency = ERC20(depositContract);
       uint256 allowance = depositCurrency.allowance(msg.sender, address(this));
       depositCurrency.transferFrom(msg.sender, address(this), allowance);
-      emit Deposit(msg.sender, allowance);
+      newBalance = depositCurrency.balanceOf(address(this));
+    }
+
+    if (newBalance == depositAmount) {
+      funded = true;
     }
   }
 
@@ -54,6 +62,8 @@ contract Option {
   // requires that the option be fully deposited
   // and that the holder has made an allowance of the settlement currency
   function exercise() public {
+    require(funded, "not funded");
+
     // Only holder may call
     require(msg.sender == holder, "Sender not authorized");
 

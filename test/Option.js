@@ -35,18 +35,36 @@ contract('Option', (accounts) => {
       // expires in 90 days
       const expiration = (await latestTime()) + duration.days(90);
       // writer deposits 10 ETH, expects 10000 tokens
-      option = await Option.new(holder, 0, settlementCurrency.address, 10, 10000, expiration, { from: writer });
+      option = await Option.new(holder, 0, settlementCurrency.address, deposit, 10000, expiration, { from: writer });
     });
 
-    xit('should not allow exercise before deposit', async () => {
+    it('should not allow exercise before deposit', async () => {
+      await expectThrow(option.exercise({ from: holder }));
     });
 
-    xit('should not accept a deposit of ETH greater than the depositAmount', async () => {
+    it('should not accept a deposit of ETH greater than the depositAmount', async () => {
+      await expectThrow(option.deposit({ value: deposit.mul(2), from: writer }));
     });
 
     it('should allow writer to make deposit', async () => {
-      // deposit 10 ETH
-      await option.deposit({ value: deposit, from: writer });
+      // deposit 5 ETH
+      await option.deposit({ value: deposit.div(2), from: writer });
+      web3.eth.getBalance(option.address).should.be.bignumber.equal(deposit.div(2));
+    });
+
+    it('should reject ETH in excess of depositAmount', async () => {
+      // attempt to deposit 10 eth
+      await expectThrow(option.deposit({ value: deposit, from: rando }));
+    });
+
+    it('should allow non-writer to make ETH deposit', async () => {
+      // deposit another 5 ETH to complete deposit
+      await option.deposit({ value: deposit.div(2), from: rando });
+      web3.eth.getBalance(option.address).should.be.bignumber.equal(deposit);
+    });
+
+    it('should not allow overdeposit', async () => {
+      await expectThrow(option.deposit({ value: deposit, from: writer }));
       web3.eth.getBalance(option.address).should.be.bignumber.equal(deposit);
     });
 
@@ -117,17 +135,6 @@ contract('Option', (accounts) => {
     });
 
     xit('should not be able to get the money back again', async () => {
-    });
-  });
-
-  context('multi-part ETH deposit', () => {
-    xit('should allow non-writer to make ETH deposit', async () => {
-    });
-
-    xit('should allow writer to make ETH deposit', async () => {
-    });
-
-    xit('should reject ETH in excess of depositAmount', async () => {
     });
   });
 
