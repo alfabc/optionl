@@ -23,21 +23,21 @@ contract('Option', (accounts) => {
 
   context('offer ETH for ERC20 token', () => {
     let option;
-    let settlementCurrency;
+    let settlementToken;
     const deposit = tenETH;
 
     it('should set up ERC20 token', async () => {
       // allocate 11k tokens to the holder; 10k for the settlement,
       // another 1k for test
-      settlementCurrency = await MockERC20.new(holder, 11000);
-      (await settlementCurrency.balanceOf(holder)).toNumber().should.be.equal(11000);
+      settlementToken = await MockERC20.new(holder, 11000);
+      (await settlementToken.balanceOf(holder)).toNumber().should.be.equal(11000);
     });
 
     it('should allow writer to create option', async () => {
       // expires in 90 days
       const expiration = (await latestTime()) + duration.days(90);
       // writer deposits 10 ETH, expects 10000 tokens
-      option = await Option.new(holder, 0, settlementCurrency.address, deposit, 10000, expiration, { from: writer });
+      option = await Option.new(holder, 0, settlementToken.address, deposit, 10000, expiration, { from: writer });
     });
 
     it('should not allow exercise before deposit', async () => {
@@ -71,7 +71,7 @@ contract('Option', (accounts) => {
     });
 
     it('should allow holder to exercise option', async () => {
-      await settlementCurrency.approve(option.address, 10000, { from: holder });
+      await settlementToken.approve(option.address, 10000, { from: holder });
       const holderBalanceBefore = web3.eth.getBalance(holder);
       let result = await option.exercise({ from: holder });
       const tx = await web3.eth.getTransaction(result.tx);
@@ -79,37 +79,37 @@ contract('Option', (accounts) => {
       // ETH balance for the holder should have increased (minus gas costs)
       web3.eth.getBalance(holder).should.be.bignumber.equal(holderBalanceBefore.plus(deposit.minus(gasCost)));
       // token balances should have shifted
-      (await settlementCurrency.balanceOf(holder)).toNumber().should.be.equal(1000);
-      (await settlementCurrency.balanceOf(writer)).toNumber().should.be.equal(10000);
+      (await settlementToken.balanceOf(holder)).toNumber().should.be.equal(1000);
+      (await settlementToken.balanceOf(writer)).toNumber().should.be.equal(10000);
     });
 
     it('should not be able to exceed the option', async () => {
-      await settlementCurrency.approve(option.address, 1000, { from: holder });
+      await settlementToken.approve(option.address, 1000, { from: holder });
       await expectThrow(option.exercise({ from: holder }));
     });
   });
 
   context('offer ERC20 tokens for ERC20 tokens', () => {
-    let depositCurrency;
-    let settlementCurrency;
+    let depositToken;
+    let settlementToken;
     let option;
 
     it('should set up ERC20 tokens', async () => {
       // allocate 6k tokens to the writer
-      depositCurrency = await MockERC20.new(writer, 6000);
-      (await depositCurrency.balanceOf(writer)).toNumber().should.be.equal(6000);
+      depositToken = await MockERC20.new(writer, 6000);
+      (await depositToken.balanceOf(writer)).toNumber().should.be.equal(6000);
       // writer gives 2k tokens to rando
-      await depositCurrency.transfer(rando, 2000, { from: writer });
+      await depositToken.transfer(rando, 2000, { from: writer });
       // allocate 8k tokens to the holder
-      settlementCurrency = await MockERC20.new(holder, 8000);
-      (await settlementCurrency.balanceOf(holder)).toNumber().should.be.equal(8000);
+      settlementToken = await MockERC20.new(holder, 8000);
+      (await settlementToken.balanceOf(holder)).toNumber().should.be.equal(8000);
     });
 
     it('should allow writer to create option', async () => {
       // expires in 30 days
       const expiration = (await latestTime()) + duration.days(30);
       // writer deposits 5k token A, expects 8k token B
-      option = await Option.new(holder, depositCurrency.address, settlementCurrency.address, 5000, 8000, expiration, { from: writer });
+      option = await Option.new(holder, depositToken.address, settlementToken.address, 5000, 8000, expiration, { from: writer });
     });
 
     it('should not allow writer to send ETH with ERC20 deposit', async () => {
@@ -118,16 +118,16 @@ contract('Option', (accounts) => {
 
     it('should allow writer to deposit with ERC20.approve', async () => {
       // deposit 1000 token A
-      await depositCurrency.approve(option.address, 1000, { from: writer });
+      await depositToken.approve(option.address, 1000, { from: writer });
       await option.deposit({ from: writer });
-      (await depositCurrency.balanceOf(option.address)).toNumber().should.be.equal(1000);
+      (await depositToken.balanceOf(option.address)).toNumber().should.be.equal(1000);
     });
 
     it('should allow non-writer to deposit with ERC20.approve', async () => {
       // deposit 2000 token A
-      await depositCurrency.approve(option.address, 2000, { from: rando });
+      await depositToken.approve(option.address, 2000, { from: rando });
       await option.deposit({ from: rando });
-      (await depositCurrency.balanceOf(option.address)).toNumber().should.be.equal(3000);
+      (await depositToken.balanceOf(option.address)).toNumber().should.be.equal(3000);
     });
 
     xit('should allow for funds arrived via ERC20.transfer', async () => {
@@ -135,26 +135,26 @@ contract('Option', (accounts) => {
 
     it('should only take remaining depositAmount from allowance', async () => {
       // deposit 3000 token A, of which only 2000 should be taken
-      await depositCurrency.approve(option.address, 3000, { from: writer });
+      await depositToken.approve(option.address, 3000, { from: writer });
       await option.deposit({ from: writer });
-      (await depositCurrency.balanceOf(option.address)).toNumber().should.be.equal(5000);
+      (await depositToken.balanceOf(option.address)).toNumber().should.be.equal(5000);
       // writer should have an outstanding balance of 1000 token A
-      (await depositCurrency.balanceOf(writer)).toNumber().should.be.equal(1000);
+      (await depositToken.balanceOf(writer)).toNumber().should.be.equal(1000);
       // writer should have an outstanding allowance of 1000 token A
-      (await depositCurrency.allowance(writer, option.address)).toNumber().should.be.equal(1000);
+      (await depositToken.allowance(writer, option.address)).toNumber().should.be.equal(1000);
     });
 
     it('should not allow excess deposit via ERC20.approve', async () => {
       // deposit 1000 token A
-      await depositCurrency.approve(option.address, 1000, { from: writer });
+      await depositToken.approve(option.address, 1000, { from: writer });
       await expectThrow(option.deposit({ from: writer }));
-      (await depositCurrency.balanceOf(option.address)).toNumber().should.be.equal(5000);
+      (await depositToken.balanceOf(option.address)).toNumber().should.be.equal(5000);
     });
 
     // holder approves ERC20
     it('should let holder approve ERC20', async () => {
       // just a test case for convenience -- needs to be before next two cases
-      await settlementCurrency.approve(option.address, 8000, { from: holder });
+      await settlementToken.approve(option.address, 8000, { from: holder });
     });
 
     it('should not let anyone but holder to exercise', async () => {
@@ -165,11 +165,11 @@ contract('Option', (accounts) => {
     it('should allow the holder to exercise the option', async () => {
       await option.exercise({ from: holder });
       // token balances should have shifted
-      (await depositCurrency.balanceOf(option.address)).toNumber().should.be.equal(0);
-      (await depositCurrency.balanceOf(writer)).toNumber().should.be.equal(1000);
-      (await depositCurrency.balanceOf(holder)).toNumber().should.be.equal(5000);
-      (await settlementCurrency.balanceOf(writer)).toNumber().should.be.equal(8000);
-      (await settlementCurrency.balanceOf(holder)).toNumber().should.be.equal(0);
+      (await depositToken.balanceOf(option.address)).toNumber().should.be.equal(0);
+      (await depositToken.balanceOf(writer)).toNumber().should.be.equal(1000);
+      (await depositToken.balanceOf(holder)).toNumber().should.be.equal(5000);
+      (await settlementToken.balanceOf(writer)).toNumber().should.be.equal(8000);
+      (await settlementToken.balanceOf(holder)).toNumber().should.be.equal(0);
     });
   });
 
