@@ -91,9 +91,11 @@ contract('Option', (accounts) => {
     let option;
 
     it('should set up ERC20 tokens', async () => {
-      // allocate 5k tokens to the writer
-      depositCurrency = await MockERC20.new(writer, 5000);
-      (await depositCurrency.balanceOf(writer)).toNumber().should.be.equal(5000);
+      // allocate 6k tokens to the writer
+      depositCurrency = await MockERC20.new(writer, 6000);
+      (await depositCurrency.balanceOf(writer)).toNumber().should.be.equal(6000);
+      // writer gives 2k tokens to rando
+      await depositCurrency.transfer(rando, 2000, { from: writer });
       // allocate 8k tokens to the holder
       settlementCurrency = await MockERC20.new(holder, 8000);
       (await settlementCurrency.balanceOf(holder)).toNumber().should.be.equal(8000);
@@ -106,10 +108,42 @@ contract('Option', (accounts) => {
       option = await Option.new(holder, depositCurrency.address, settlementCurrency.address, 5000, 8000, expiration, { from: writer });
     });
 
-    it('should allow writer to make deposit', async () => {
-      // deposit 5000 token A
-      await depositCurrency.approve(option.address, 5000, { from: writer });
+    it('should not allow writer to send ETH with ERC20 deposit', async () => {
+      await expectThrow(option.deposit({ value: 10000, from: writer }));
+    });
+
+    it('should allow writer to deposit with ERC20.approve', async () => {
+      // deposit 1000 token A
+      await depositCurrency.approve(option.address, 1000, { from: writer });
       await option.deposit({ from: writer });
+      (await depositCurrency.balanceOf(option.address)).toNumber().should.be.equal(1000);
+    });
+
+    it('should allow non-writer to deposit with ERC20.approve', async () => {
+      // deposit 2000 token A
+      await depositCurrency.approve(option.address, 2000, { from: rando });
+      await option.deposit({ from: rando });
+      (await depositCurrency.balanceOf(option.address)).toNumber().should.be.equal(3000);
+    });
+
+    xit('should allow for funds arrived via ERC20.transfer', async () => {
+    });
+
+    it('should only take remaining depositAmount from allowance', async () => {
+      // deposit 3000 token A, of which only 2000 should be taken
+      await depositCurrency.approve(option.address, 3000, { from: writer });
+      await option.deposit({ from: writer });
+      (await depositCurrency.balanceOf(option.address)).toNumber().should.be.equal(5000);
+      // writer should have an outstanding balance of 1000 token A
+      (await depositCurrency.balanceOf(writer)).toNumber().should.be.equal(1000);
+      // writer should have an outstanding allowance of 1000 token A
+      (await depositCurrency.allowance(writer, option.address)).toNumber().should.be.equal(1000);
+    });
+
+    it('should not allow excess deposit via ERC20.approve', async () => {
+      // deposit 1000 token A
+      await depositCurrency.approve(option.address, 1000, { from: writer });
+      await expectThrow(option.deposit({ from: writer }));
       (await depositCurrency.balanceOf(option.address)).toNumber().should.be.equal(5000);
     });
 
@@ -128,27 +162,13 @@ contract('Option', (accounts) => {
       await option.exercise({ from: holder });
       // token balances should have shifted
       (await depositCurrency.balanceOf(option.address)).toNumber().should.be.equal(0);
-      (await depositCurrency.balanceOf(writer)).toNumber().should.be.equal(0);
+      (await depositCurrency.balanceOf(writer)).toNumber().should.be.equal(1000);
       (await depositCurrency.balanceOf(holder)).toNumber().should.be.equal(5000);
       (await settlementCurrency.balanceOf(writer)).toNumber().should.be.equal(8000);
       (await settlementCurrency.balanceOf(holder)).toNumber().should.be.equal(0);
     });
 
     xit('should not be able to get the money back again', async () => {
-    });
-  });
-
-  context('multi-part ERC20 deposit', () => {
-    xit('should allow non-writer to make ERC20 deposit', async () => {
-    });
-
-    xit('should allow writer to make ERC20 deposit', async () => {
-    });
-
-    xit('should not take a deposit allowance larger than the depositAmount', async () => {
-    });
-
-    xit('should not allow writer to send ETH with ERC20 deposit', async () => {
     });
   });
 
