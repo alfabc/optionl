@@ -261,8 +261,15 @@ contract('Option', (accounts) => {
     // allow for existing ERC20 balance through transfer instead of allowance
   });
 
-  context('option expires before deposit complete', () => {
-    xit('should allow writer to recover funds', async () => {
+  context('fund recovery', () => {
+    xit('should allow writer to recover funds when holder not set', async () => {
+    });
+
+    // TBD which takes precedence? if holder is set, has it been sold?
+    xit('should allow writer to recover funds when deposit incomplete', async () => {
+    });
+
+    xit('should allow writer to recover funds when option expires before deposit complete', async () => {
     });
   });
 
