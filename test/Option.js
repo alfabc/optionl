@@ -273,26 +273,20 @@ contract('Option', (accounts) => {
     });
   });
 
-  context('totally expired option', () => {
-    xit('should allow writer to recover unexercised funds', async () => {
+  context('expired option', () => {
+    xit('should allow writer to recover all funds when no exercise', async () => {
+    });
+
+    xit('should allow writer to recover the unexercised funds', async () => {
     });
   });
 
-  context('partially exercised option which expires', () => {
-    xit('should allow writer to recover unexercised funds', async () => {
-    });
-  });
-
-  context('partially funded option', () => {
-    xit('should allow writer to cancel', async () => {
-    });
-  });
-
-  context('check for numerical and rounding difficulties', () => {
+  context('numerical and rounding difficulties', () => {
     xit('should handle zero settlement amount', async () => {
       // settlementAmount = 3
     });
 
+    // TBD would a strike price instead of a settlementAmount avoid this?
     xit('should handle remainders', async () => {
       // allowance = 1, depositAmount = 2, settlementAmount = 3
     });
