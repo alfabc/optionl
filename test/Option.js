@@ -90,30 +90,30 @@ contract('Option', (accounts) => {
   });
 
   context('simple ERC20 tokens for ERC20 tokens', () => {
+    let depositToken, settlementToken, expiration, option; // eslint-disable-line one-var, one-var-declaration-per-line
+
+    beforeEach(async () => {
+      depositToken = await MockERC20.new(writer, 1000);
+      settlementToken = await MockERC20.new(holder, 2000);
+      expiration = (await latestTime()) + duration.days(30);
+      option = await Option.new(holder, depositToken.address, settlementToken.address, 1000, 2000, expiration, { from: writer });
+    });
+
     it('should work with only ERC20.approve', async () => {
-      const depositToken = await MockERC20.new(writer, 1000);
-      const settlementToken = await MockERC20.new(holder, 2000);
-      const expiration = (await latestTime()) + duration.days(30);
-      const option = await Option.new(holder, depositToken.address, settlementToken.address, 1000, 2000, expiration, { from: writer });
       await depositToken.approve(option.address, 1000, { from: writer });
       await option.deposit({ from: writer });
       await settlementToken.approve(option.address, 2000, { from: holder });
       await option.exercise({ from: holder });
-      (await depositToken.balanceOf(writer)).toNumber().should.be.equal(0);
-      (await depositToken.balanceOf(holder)).toNumber().should.be.equal(1000);
-      (await settlementToken.balanceOf(writer)).toNumber().should.be.equal(2000);
-      (await settlementToken.balanceOf(holder)).toNumber().should.be.equal(0);
     });
 
     it('should work with only ERC20.transfer', async () => {
-      const depositToken = await MockERC20.new(writer, 1000);
-      const settlementToken = await MockERC20.new(holder, 2000);
-      const expiration = (await latestTime()) + duration.days(30);
-      const option = await Option.new(holder, depositToken.address, settlementToken.address, 1000, 2000, expiration, { from: writer });
       await depositToken.transfer(option.address, 1000, { from: writer });
       await option.deposit({ from: writer });
       await settlementToken.transfer(option.address, 2000, { from: holder });
       await option.exercise({ from: holder });
+    });
+
+    afterEach(async () => {
       (await depositToken.balanceOf(writer)).toNumber().should.be.equal(0);
       (await depositToken.balanceOf(holder)).toNumber().should.be.equal(1000);
       (await settlementToken.balanceOf(writer)).toNumber().should.be.equal(2000);
