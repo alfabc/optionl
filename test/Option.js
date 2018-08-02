@@ -247,7 +247,19 @@ contract('Option', (accounts) => {
     });
   });
 
-  context('fund recovery', () => {
+  context('expired option', () => {
+    xit('should not allow exercise after expiration', async () => {
+    });
+
+    // TBD how soon can writer take back the deposit? Next second?
+    xit('should allow writer to recover all funds when no exercise', async () => {
+    });
+
+    xit('should allow writer to recover the unexercised funds when partial exercise', async () => {
+    });
+  });
+
+  context('cancellation of option by writer', () => {
     xit('should allow writer to recover funds when holder not set', async () => {
     });
 
@@ -259,11 +271,20 @@ contract('Option', (accounts) => {
     });
   });
 
-  context('expired option', () => {
-    xit('should allow writer to recover all funds when no exercise', async () => {
+  context('cancellation of option by holder', () => {
+    xit('should allow the holder to surrender the option', async () => {
     });
 
-    xit('should allow writer to recover the unexercised funds', async () => {
+    xit('should allow the writer to recover the unexercised funds of a surrendered optiion', async () => {
+    });
+
+    xit('should not allow further deposits on a surrendered option', async () => {
+    });
+
+    xit('should not allow further exercise of a surrendered option', async () => {
+    });
+
+    xit('should not allow cancellation of an expired option', async () => {
     });
   });
 
