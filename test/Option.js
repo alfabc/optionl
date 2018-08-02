@@ -247,20 +247,6 @@ contract('Option', (accounts) => {
     });
   });
 
-  context('deposit should not take more than the settlementAmount when the ETH sent exceeds it', () => {
-    // should check existing balance in mult-part deposit scenario
-  });
-
-  context('deposit should not take more than the settlementAmount when the ERC20 allowance exceeds it', () => {
-    // should check existing balance in mult-part deposit scenario
-  });
-
-  context('exercise should not take more than the settlementAmount when the ERC20 allowance exceeds it', () => {
-    // should check existing balance in mult-part deposit scenario
-
-    // allow for existing ERC20 balance through transfer instead of allowance
-  });
-
   context('fund recovery', () => {
     xit('should allow writer to recover funds when holder not set', async () => {
     });
