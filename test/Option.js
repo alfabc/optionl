@@ -267,7 +267,7 @@ contract('Option', (accounts) => {
     });
   });
 
-  context('numerical and rounding difficulties', () => {
+  context('numerical and rounding considerations', () => {
     xit('should handle zero settlement amount', async () => {
       // settlementAmount = 3
     });
