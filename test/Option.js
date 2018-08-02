@@ -213,10 +213,15 @@ contract('Option', (accounts) => {
   context('do not allow ETH deposit for uninitialized contract', () => {
     // specifically necessary for the first deployed contract
     // which will have all 0 parameters
-    xit('should reject ETH value when not contract not initialized properly', async () => {
+    it('should reject ETH value when contract not initialized properly', async () => {
+      // send ETH with constructor
+      await expectThrow(Option.new(0, 0, 0, 0, 0, 0, { from: writer, value: tenETH }));
     });
 
-    xit('should reject deposit call for uninitialized contract', async () => {
+    it('should reject deposit call for uninitialized contract', async () => {
+      // send ETH with deposit
+      let option = await Option.new(0, 0, 0, 0, 0, 0, { from: writer });
+      await expectThrow(option.deposit({ from: writer, value: tenETH }));
     });
   });
 
