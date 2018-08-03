@@ -248,14 +248,48 @@ contract('Option', (accounts) => {
   });
 
   context('expired option', () => {
-    xit('should not allow exercise after expiration', async () => {
+    let depositToken, settlementToken, theNow, expiration, option; // eslint-disable-line one-var, one-var-declaration-per-line
+    beforeEach(async () => {
+      depositToken = await MockERC20.new(writer, 1000);
+      settlementToken = await MockERC20.new(holder, 2000);
+      theNow = (await latestTime())
+      expiration = theNow + duration.days(30);
+      option = await Option.new(holder, depositToken.address, settlementToken.address, 1000, 2000, expiration, { from: writer });
+      await depositToken.transfer(option.address, 1000, { from: writer });
     });
 
-    // TBD how soon can writer take back the deposit? Next second?
-    xit('should allow writer to recover all funds when no exercise', async () => {
+    it('should not allow deposit after expiration', async () => {
+      await increaseTimeTo(theNow + duration.days(31));
+      await expectThrow(option.deposit({ from: writer }));
     });
 
-    xit('should allow writer to recover the unexercised funds when partial exercise', async () => {
+    it('should not allow exercise after expiration', async () => {
+      await option.deposit({ from: writer });
+      await settlementToken.transfer(option.address, 2000, { from: holder });
+      await increaseTimeTo(theNow + duration.days(31));
+      await expectThrow(option.exercise({ from: holder }));
+    });
+
+    it('should allow writer to recover all funds when no exercise', async () => {
+      await option.deposit({ from: writer });
+      // must be expired
+      await expectThrow(option.recoverDeposit({ from: writer }));
+      (await depositToken.balanceOf(writer)).toNumber().should.be.equal(0);
+      await increaseTimeTo(expiration + 1);
+      // must be sent by writer
+      await expectThrow(option.recoverDeposit({ from: holder }));
+      await option.recoverDeposit({ from: writer });
+      (await depositToken.balanceOf(writer)).toNumber().should.be.equal(1000);
+
+    });
+
+    it('should allow writer to recover only the unexercised funds when partial exercise', async () => {
+      await option.deposit({ from: writer });
+      await settlementToken.transfer(option.address, 1000, { from: holder });
+      await option.exercise({ from: holder });
+      await increaseTimeTo(expiration + 1);
+      await option.recoverDeposit({ from: writer });
+      (await depositToken.balanceOf(writer)).toNumber().should.be.equal(500);
     });
   });
 
