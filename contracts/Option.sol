@@ -125,7 +125,7 @@ contract Option {
     // Note: block timestamps are potentially manipulable
     require(expiration <= block.timestamp, "not expired"); // solium-disable-line security/no-block-members
 
-    // Find out how much of the deposit remains
+    // Return the remaining deposit
     // ETH has no contract
     if (depositContract == ERC20(0)) {
       writer.transfer(address(this).balance);
