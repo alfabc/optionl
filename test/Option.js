@@ -252,7 +252,7 @@ contract('Option', (accounts) => {
     beforeEach(async () => {
       depositToken = await MockERC20.new(writer, 1000);
       settlementToken = await MockERC20.new(holder, 2000);
-      theNow = (await latestTime())
+      theNow = (await latestTime());
       expiration = theNow + duration.days(30);
       option = await Option.new(holder, depositToken.address, settlementToken.address, 1000, 2000, expiration, { from: writer });
       await depositToken.transfer(option.address, 1000, { from: writer });
@@ -280,7 +280,6 @@ contract('Option', (accounts) => {
       await expectThrow(option.recoverDeposit({ from: holder }));
       await option.recoverDeposit({ from: writer });
       (await depositToken.balanceOf(writer)).toNumber().should.be.equal(1000);
-
     });
 
     it('should allow writer to recover only the unexercised funds when partial exercise', async () => {
