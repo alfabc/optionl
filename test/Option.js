@@ -247,7 +247,7 @@ contract('Option', (accounts) => {
     });
   });
 
-  context('expired option', () => {
+  context('expired ERC20/ERC20 option', () => {
     let depositToken, settlementToken, theNow, expiration, option; // eslint-disable-line one-var, one-var-declaration-per-line
     beforeEach(async () => {
       depositToken = await MockERC20.new(writer, 1000);
@@ -289,6 +289,36 @@ contract('Option', (accounts) => {
       await increaseTimeTo(expiration + 1);
       await option.recoverDeposit({ from: writer });
       (await depositToken.balanceOf(writer)).toNumber().should.be.equal(500);
+    });
+  });
+
+  context('expired ETH/ERC20 option', () => {
+    let settlementToken, theNow, expiration, option; // eslint-disable-line one-var, one-var-declaration-per-line
+    beforeEach(async () => {
+      settlementToken = await MockERC20.new(holder, 2000);
+      theNow = (await latestTime());
+      expiration = theNow + duration.days(30);
+      option = await Option.new(holder, 0, settlementToken.address, tenETH, 2000, expiration, { from: writer, value: tenETH });
+    });
+
+    it('should allow writer to recover all funds when no exercise', async () => {
+      // must be expired
+      await expectThrow(option.recoverDeposit({ from: writer }));
+      await increaseTimeTo(expiration + 1);
+      const writerBalanceBefore = web3.eth.getBalance(writer);
+      const result = await option.recoverDeposit({ from: writer });
+      const tx = await web3.eth.getTransaction(result.tx);
+      const gasCost = tx.gasPrice.mul(result.receipt.gasUsed);
+      // ETH balance for the writer should have increased (minus gas costs)
+      web3.eth.getBalance(writer).should.be.bignumber.equal(writerBalanceBefore.plus(tenETH.minus(gasCost)));
+    });
+
+    it('should allow writer to recover only the unexercised funds when partial exercise', async () => {
+      await settlementToken.transfer(option.address, 1000, { from: holder });
+      await option.exercise({ from: holder });
+      await expectThrow(option.recoverDeposit({ from: writer }));
+      await increaseTimeTo(expiration + 1);
+      await option.recoverDeposit({ from: writer });
     });
   });
 
