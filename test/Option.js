@@ -38,6 +38,14 @@ contract('Option', (accounts) => {
       const expiration = (await latestTime()) + duration.days(90);
       // writer deposits 10 ETH, expects 10000 tokens
       option = await Option.new(holder, 0, settlementToken.address, deposit, 10000, expiration, { from: writer });
+      (await option.writer()).should.be.eq(writer);
+      (await option.holder()).should.be.eq(holder);
+      web3.toBigNumber(await option.depositContract()).isZero().should.be.true;
+      (await option.settlementContract()).should.be.eq(settlementToken.address);
+      (await option.depositAmount()).should.be.bignumber.equal(deposit);
+      (await option.settlementAmount()).toNumber().should.be.eq(10000);
+      (await option.expiration()).toNumber().should.be.eq(expiration);
+      (await option.funded()).should.be.false;
     });
 
     it('should not allow exercise before deposit', async () => {
@@ -97,6 +105,14 @@ contract('Option', (accounts) => {
       settlementToken = await MockERC20.new(holder, 2000);
       expiration = (await latestTime()) + duration.days(30);
       option = await Option.new(holder, depositToken.address, settlementToken.address, 1000, 2000, expiration, { from: writer });
+      (await option.writer()).should.be.eq(writer);
+      (await option.holder()).should.be.eq(holder);
+      (await option.depositContract()).should.be.eq(depositToken.address);
+      (await option.settlementContract()).should.be.eq(settlementToken.address);
+      (await option.depositAmount()).toNumber().should.be.eq(1000);
+      (await option.settlementAmount()).toNumber().should.be.eq(2000);
+      (await option.expiration()).toNumber().should.be.eq(expiration);
+      (await option.funded()).should.be.false;
     });
 
     it('should work with only ERC20.approve', async () => {
@@ -142,16 +158,19 @@ contract('Option', (accounts) => {
       const expiration = (await latestTime()) + duration.days(30);
       // writer deposits 5k token A, expects 8k token B
       option = await Option.new(holder, depositToken.address, settlementToken.address, 5000, 8000, expiration, { from: writer });
+      (await option.funded()).should.be.false;
     });
 
     it('should not allow writer to send ETH with ERC20 deposit', async () => {
       await expectThrow(option.deposit({ value: 10000, from: writer }));
+      (await option.funded()).should.be.false;
     });
 
     it('should allow writer to deposit with ERC20.approve', async () => {
       // deposit 1000 token A
       await depositToken.approve(option.address, 1000, { from: writer });
       await option.deposit({ from: writer });
+      (await option.funded()).should.be.false;
       (await depositToken.balanceOf(option.address)).toNumber().should.be.equal(1000);
     });
 
@@ -165,13 +184,16 @@ contract('Option', (accounts) => {
       // deposit 1000 token A
       await depositToken.approve(option.address, 1000, { from: rando });
       await option.deposit({ from: rando });
+      (await option.funded()).should.be.false;
       (await depositToken.balanceOf(option.address)).toNumber().should.be.equal(3000);
     });
 
     it('should only take remaining depositAmount from allowance', async () => {
       // deposit 3000 token A, of which only 2000 should be taken
       await depositToken.approve(option.address, 3000, { from: writer });
+      (await option.funded()).should.be.false;
       await option.deposit({ from: writer });
+      (await option.funded()).should.be.true;
       (await depositToken.balanceOf(option.address)).toNumber().should.be.equal(5000);
       // writer should have an outstanding balance of 1000 token A
       (await depositToken.balanceOf(writer)).toNumber().should.be.equal(1000);
@@ -222,6 +244,14 @@ contract('Option', (accounts) => {
       // send ETH with deposit
       let option = await Option.new(0, 0, 0, 0, 0, 0, { from: writer });
       await expectThrow(option.deposit({ from: writer, value: tenETH }));
+      (await option.writer()).should.be.eq(writer);
+      web3.toBigNumber(await option.holder()).isZero().should.be.true;
+      web3.toBigNumber(await option.depositContract()).isZero().should.be.true;
+      web3.toBigNumber(await option.settlementContract()).isZero().should.be.true;
+      (await option.depositAmount()).isZero().should.be.true;
+      (await option.settlementAmount()).isZero().should.be.true;
+      (await option.expiration()).isZero().should.be.true;
+      (await option.funded()).should.be.false;
     });
   });
 

@@ -5,14 +5,14 @@ import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 
 contract Option {
 
-  address writer; // seller
-  address holder; // buyer
-  ERC20 depositContract; // ERC-20 contract for the deposit currency
-  ERC20 settlementContract; // ERC-20 contract for the settlement currency
-  uint256 depositAmount; // amount of deposit placed by the seller
-  uint256 settlementAmount; // amount of settlement requested by the seller
-  uint256 expiration; // time at which option expires
-  bool funded;
+  address public writer; // seller
+  address public holder; // buyer
+  ERC20 public depositContract; // ERC-20 contract for the deposit currency
+  ERC20 public settlementContract; // ERC-20 contract for the settlement currency
+  uint256 public depositAmount; // amount of deposit placed by the seller
+  uint256 public settlementAmount; // amount of settlement requested by the seller
+  uint256 public expiration; // time at which option expires
+  bool public funded;
 
   // create a new option, sending in the parameters
   // The caller is the writer, by definition
