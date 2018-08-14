@@ -364,23 +364,6 @@ contract('Option', (accounts) => {
     });
   });
 
-  context('cancellation of option by holder', () => {
-    xit('should allow the holder to surrender the option', async () => {
-    });
-
-    xit('should allow the writer to recover the unexercised funds of a surrendered optiion', async () => {
-    });
-
-    xit('should not allow further deposits on a surrendered option', async () => {
-    });
-
-    xit('should not allow further exercise of a surrendered option', async () => {
-    });
-
-    xit('should not allow cancellation of an expired option', async () => {
-    });
-  });
-
   context('numerical and rounding considerations', () => {
     xit('should handle zero settlement amount', async () => {
       // settlementAmount = 3
