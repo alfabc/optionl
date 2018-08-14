@@ -38,6 +38,16 @@ contract Option {
     }
   }
 
+  function setWriter(address newWriter) public {
+    require(writer == msg.sender, "writer only");
+    writer = newWriter;
+  }
+
+  function setHolder(address newHolder) public {
+    require(holder == msg.sender, "holder only");
+    holder = newHolder;
+  }
+
   // Called by the writer (or anyone) to fund the option with the
   // deposit currency.
   // When the deposit currency is ETH it should be sent as the value.
@@ -98,9 +108,14 @@ contract Option {
 
     // Find out how many of the settlement tokens have been allowed by the holder
     uint256 allowance = settlementContract.allowance(holder, address(this));
+    // may also have been sent in with ERC20 transfer (held in contract balance)
+    // (not recommended, but unfortunately not preventable with ERC20)
     uint256 balance = settlementContract.balanceOf(address(this));
-    uint256 exerciseAmount = (allowance + balance) * remainingDepositAmount / settlementAmount;
 
+    // The amount exercised is the sum of those two, times the "strike price"
+    uint256 exerciseAmount = (allowance + balance) * depositAmount / settlementAmount;
+
+    // The holder gets the proportional amount of the deposit
     if (depositContract == ERC20(0)) {
       // send the ETH to the holder
       holder.transfer(exerciseAmount);
@@ -109,10 +124,12 @@ contract Option {
       depositContract.transfer(holder, exerciseAmount);
     }
 
-    // send the tokens to the writer
+    // The writer gets the exercise amount from two possible places
+    // ERC20 allowance, transfered from the holder's allowance
     if (allowance > 0) {
       settlementContract.transferFrom(holder, writer, allowance);
     }
+    // ERC20 transfer, transferred from the contract balance
     if (balance > 0) {
       settlementContract.transfer(writer, balance);
     }

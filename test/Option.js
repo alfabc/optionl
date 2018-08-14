@@ -352,6 +352,72 @@ contract('Option', (accounts) => {
     });
   });
 
+  context('transfer ownership', () => {
+    let depositToken, settlementToken, expiration, option; // eslint-disable-line one-var, one-var-declaration-per-line
+    beforeEach(async () => {
+      depositToken = await MockERC20.new(writer, 1000);
+      settlementToken = await MockERC20.new(holder, 2000);
+      expiration = (await latestTime()) + duration.days(30);
+      option = await Option.new(holder, depositToken.address, settlementToken.address, 1000, 2000, expiration, { from: writer });
+      await depositToken.transfer(option.address, 1000, { from: writer });
+      await option.deposit({ from: writer });
+      (await option.funded()).should.be.true;
+    });
+
+    it('should allow writer to set a new writer, who gets deposit on expiration', async () => {
+      // writer assigns new writer
+      await option.setWriter(rando, { from: writer });
+      // expire the option
+      await increaseTimeTo(expiration + 1);
+      // original writer no longer gets deposit as is no longer the writer
+      await expectThrow(option.recoverDeposit({ from: writer }));
+      // new writer recovers the deposit
+      await option.recoverDeposit({ from: rando });
+      // new (not old) writer should have the deposit
+      (await depositToken.balanceOf(writer)).toNumber().should.be.equal(0);
+      (await depositToken.balanceOf(rando)).toNumber().should.be.equal(1000);
+    });
+
+    it('should not allow non-writer to set a new writer', async () => {
+      await expectThrow(option.setWriter(rando, { from: rando }));
+    });
+
+    // Holder exercises 25%, transfers to other, who exercises 50%;
+    // holder tries again, fails, then other exercises remaining 25%.
+    it('should allow holder, after exercise, to set a new holder, who can exercise', async () => {
+      // partially exercise
+      await settlementToken.approve(option.address, 500, { from: holder });
+      await option.exercise({ from: holder });
+      (await depositToken.balanceOf(holder)).toNumber().should.be.equal(250);
+      (await depositToken.balanceOf(option.address)).toNumber().should.be.equal(750);
+      await option.setHolder(rando, { from: holder });
+      // (send rando some of the token they need for settlement)
+      await settlementToken.transfer(rando, 1000, { from: holder });
+      // rando exercises some
+      await settlementToken.approve(option.address, 1000, { from: rando });
+      await option.exercise({ from: rando });
+      (await depositToken.balanceOf(option.address)).toNumber().should.be.equal(250);
+      (await depositToken.balanceOf(rando)).toNumber().should.be.equal(500);
+      // now the original holder tries to execute again, but fails
+      await settlementToken.approve(option.address, 500, { from: holder });
+      await expectThrow(option.exercise({ from: holder }));
+      // (send the rando the rest of the tokens needed)
+      await settlementToken.transfer(rando, 500, { from: holder });
+      // rando does final exercise
+      await settlementToken.approve(option.address, 500, { from: rando });
+      await option.exercise({ from: rando });
+      (await depositToken.balanceOf(option.address)).toNumber().should.be.equal(0);
+      (await depositToken.balanceOf(rando)).toNumber().should.be.equal(750);
+      (await depositToken.balanceOf(holder)).toNumber().should.be.equal(250);
+      (await depositToken.balanceOf(writer)).toNumber().should.be.equal(0);
+      (await settlementToken.balanceOf(writer)).toNumber().should.be.equal(2000);
+    });
+
+    it('should not allow non-holder to set a new holder', async () => {
+      await expectThrow(option.setHolder(rando, { from: rando }));
+    });
+  });
+
   context('cancellation of option by writer', () => {
     xit('should allow writer to recover funds when holder not set', async () => {
     });
