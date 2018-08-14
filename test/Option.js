@@ -356,6 +356,9 @@ contract('Option', (accounts) => {
     xit('should allow writer to recover funds when holder not set', async () => {
     });
 
+    xit('should allow writer to cancel option when writer is also holder', async () => {
+    });
+
     // TBD which takes precedence? if holder is set, has it been sold?
     xit('should allow writer to recover funds when deposit incomplete', async () => {
     });
