@@ -41,19 +41,19 @@ contract('Holder', (accounts) => {
     });
 
     it('should not allow non-holder to set a price', async () => {
-      await expectThrow(holderProxy.setTransferPrice( 0, tenETH, { from: rando }));
+      await expectThrow(holderProxy.setTransferPrice(0, tenETH, { from: rando }));
     });
 
     it('should allow holder to set a price', async () => {
-      await holderProxy.setTransferPrice( 0, tenETH.plus(oneETH), { from: holder });
+      await holderProxy.setTransferPrice(0, tenETH.plus(oneETH), { from: holder });
     });
 
     it('should not allow non-holder to set the option', async () => {
-      await expectThrow(holderProxy.setOption( option.address, { from: rando }));
+      await expectThrow(holderProxy.setOption(option.address, { from: rando }));
     });
 
     it('should allow holder to set the option', async () => {
-      await holderProxy.setOption( option.address, { from: holder });
+      await holderProxy.setOption(option.address, { from: holder });
     });
 
     it('should allow holder to set the option holder', async () => {
@@ -98,7 +98,7 @@ contract('Holder', (accounts) => {
     });
 
     it('should allow holder to set the option', async () => {
-      await holderProxy.setOption( option.address, { from: holder });
+      await holderProxy.setOption(option.address, { from: holder });
     });
 
     it('should allow holder to set the option holder', async () => {
@@ -155,14 +155,18 @@ contract('Holder', (accounts) => {
       // reset again
       await option.setHolder(holderProxy.address, { from: buyer });
       await saleToken.transfer(buyer, 1000, { from: holder });
-      // transfer 1100
-      await saleToken.transfer(holderProxy.address, 1100, { from: buyer });
+      // transfer 900
+      await saleToken.transfer(holderProxy.address, 900, { from: buyer });
       // fails because an allowance still exists from the last one.
-      // This tests that you can't have a mixture of allowances and transfers.
       await expectThrow(holderProxy.buy({ from: buyer }));
       // clear out pending approval
       await saleToken.approve(holderProxy.address, 0, { from: buyer });
-      // succeeds
+      // This tests that you can't have a mixture of allowances and transfers,
+      // as it doesn't work with both at once.
+      await expectThrow(holderProxy.buy({ from: buyer }));
+      // Transfer the other 200
+      await saleToken.transfer(holderProxy.address, 200, { from: buyer });
+      // succeeds when excess transfer balance available
       await holderProxy.buy({ from: buyer });
       (await option.holder()).should.be.eq(buyer);
       (await saleToken.balanceOf(holder)).toNumber().should.be.eq(1000);
