@@ -107,7 +107,7 @@ contract('Holder', (accounts) => {
     });
 
     it('should not allow buyer to send ETH instead of ERC20', async () => {
-      await expectThrow(holderProxy.buy({ from: buyer, tenETH }));
+      await expectThrow(holderProxy.buy({ from: buyer, value: tenETH }));
       (await option.holder()).should.be.eq(holderProxy.address);
     });
 
@@ -132,7 +132,11 @@ contract('Holder', (accounts) => {
       await saleToken.transfer(buyer, 10, { from: holder });
     });
 
-
+    xit('should allow buyer to take posession with ERC20 transfer', async () => {
+      await saleToken.approve(holderProxy.address, 10, { from: buyer });
+      await holderProxy.buy({ from: buyer });
+      (await option.holder()).should.be.eq(buyer);
+    });
   });
 });
 
