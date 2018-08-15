@@ -1,9 +1,9 @@
 pragma solidity ^0.4.23;
 
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
+import "./OptionInterface.sol";
 
 
-contract Option {
+contract Option is OptionInterface {
 
   address public writer; // seller
   address public holder; // buyer
@@ -34,58 +34,30 @@ contract Option {
     funded = false;
 
     if (msg.value > 0) {
-      deposit();
+      depositInternal();
     }
   }
 
-  function setWriter(address newWriter) public {
+  function setWriter(address newWriter) external {
     require(writer == msg.sender, "writer only");
     writer = newWriter;
   }
 
-  function setHolder(address newHolder) public {
+  function setHolder(address newHolder) external {
     require(holder == msg.sender, "holder only");
     holder = newHolder;
   }
 
   // Called by the writer (or anyone) to fund the option with the
   // deposit currency.
-  // When the deposit currency is ETH it should be sent as the value.
-  // When the deposit currency is ERC-20 it should be `approve`d for
-  // the contract first.
-  function deposit() public payable {
-    require(!funded, "already funded");
-
-    // Note: block timestamps are potentially manipulable
-    require(expiration > block.timestamp, "expired"); // solium-disable-line security/no-block-members
-
-    uint256 newBalance;
-
-    if (depositContract == ERC20(0)) {
-      require(address(this).balance <= depositAmount, "depositAmount exceeded");
-      newBalance = address(this).balance;
-    } else {
-      require(msg.value == 0, "ERC20 only depositContract");
-      uint256 allowance = depositContract.allowance(msg.sender, address(this));
-      // Get the current deposit, which may include ERC20.transfer amounts
-      // (not recommended, but not preventable)
-      newBalance = depositContract.balanceOf(address(this));
-      // Transfer whatever remains to be deposited from the allowance
-      uint256 transferAmount = (allowance < (depositAmount - newBalance)) ? allowance : (depositAmount - newBalance); // `MIN`
-      depositContract.transferFrom(msg.sender, address(this), transferAmount);
-      // new balance after transfer
-      newBalance = depositContract.balanceOf(address(this));
-    }
-
-    if (newBalance == depositAmount) {
-      funded = true;
-    }
+  function deposit() external payable {
+    depositInternal();
   }
 
   // called by the holder to give the settlement and take the deposit
   // requires that the option be fully deposited
   // and that the holder has made an allowance of the settlement currency
-  function exercise() public {
+  function exercise() external {
     require(funded, "not funded");
 
     // Note: block timestamps are potentially manipulable
@@ -136,7 +108,7 @@ contract Option {
   }
 
   // called by the writer to recover deposited funds after expiration
-  function recoverDeposit() public {
+  function recoverDeposit() external {
     require(msg.sender == writer, "Sender not authorized");
 
     // Note: block timestamps are potentially manipulable
@@ -148,6 +120,40 @@ contract Option {
       writer.transfer(address(this).balance);
     } else {
       depositContract.transfer(writer, depositContract.balanceOf(address(this)));
+    }
+  }
+
+  // Fund the option with the deposit currency.
+  // Implemented as an internal function as can also be called within constructor
+  function depositInternal() internal {
+    require(!funded, "already funded");
+
+    // Note: block timestamps are potentially manipulable
+    require(expiration > block.timestamp, "expired"); // solium-disable-line security/no-block-members
+
+    uint256 newBalance;
+
+    // When the deposit currency is ETH it should be sent as the value.
+    if (depositContract == ERC20(0)) {
+      require(address(this).balance <= depositAmount, "depositAmount exceeded");
+      newBalance = address(this).balance;
+    // When the deposit currency is ERC-20 it should be `approve`d for
+    // the contract first.
+    } else {
+      require(msg.value == 0, "ERC20 only depositContract");
+      uint256 allowance = depositContract.allowance(msg.sender, address(this));
+      // Get the current deposit, which may include ERC20.transfer amounts
+      // (not recommended, but not preventable)
+      newBalance = depositContract.balanceOf(address(this));
+      // Transfer whatever remains to be deposited from the allowance
+      uint256 transferAmount = (allowance < (depositAmount - newBalance)) ? allowance : (depositAmount - newBalance); // `MIN`
+      depositContract.transferFrom(msg.sender, address(this), transferAmount);
+      // new balance after transfer
+      newBalance = depositContract.balanceOf(address(this));
+    }
+
+    if (newBalance == depositAmount) {
+      funded = true;
     }
   }
 }
