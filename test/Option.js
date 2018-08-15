@@ -94,7 +94,7 @@ contract('Option', (accounts) => {
     });
   });
 
-  context('simple ERC20 tokens for ERC20 tokens', () => {
+  context('simple test of ERC20 tokens for ERC20 tokens', () => {
     let depositToken, settlementToken, expiration, option; // eslint-disable-line one-var, one-var-declaration-per-line
 
     beforeEach(async () => {
@@ -134,7 +134,7 @@ contract('Option', (accounts) => {
     });
   });
 
-  context('complex ERC20 tokens for ERC20 tokens', () => {
+  context('complex test of ERC20 tokens for ERC20 tokens', () => {
     let depositToken;
     let settlementToken;
     let option;
