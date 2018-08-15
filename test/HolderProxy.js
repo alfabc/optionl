@@ -13,7 +13,7 @@ const should = require('chai') // eslint-disable-line no-unused-vars
   .use(require('chai-bignumber')(BigNumber))
   .should();
 
-contract('Holder', (accounts) => {
+contract('HolderProxy', (accounts) => {
   const writer = accounts[0];
   const holder = accounts[1];
   const buyer = accounts[2];
