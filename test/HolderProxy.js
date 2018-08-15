@@ -21,23 +21,18 @@ contract('Holder', (accounts) => {
   const tenETH = new web3.BigNumber(web3.toWei(10, 'ether'));
   const oneETH = new web3.BigNumber(web3.toWei(1, 'ether'));
   let expiration;
-  let settlementToken;
 
   before(async () => {
     expiration = (await latestTime()) + duration.days(30);
-    settlementToken = await MockERC20.new(holder, 1000);
-  });
-
-  beforeEach(async () => {
-    expiration = (await latestTime()) + duration.days(30);
-    settlementToken = await MockERC20.new(holder, 1000);
   });
 
   context('sell transfer with ETH', () => {
     let holderProxy;
     let option;
+    let settlementToken;
 
     it('should create option', async () => {
+      settlementToken = await MockERC20.new(holder, 1000);
       option = await Option.new(holder, 0, settlementToken.address, tenETH, 1000, expiration, { from: writer, value: tenETH });
     });
 
@@ -83,11 +78,61 @@ contract('Holder', (accounts) => {
   });
 
   context('sell transfer with ERC20', () => {
-    xit('should allow holder to set a price', async () => {
+    let holderProxy;
+    let option;
+    let saleToken;
+    let settlementToken;
+
+    it('should create option', async () => {
+      settlementToken = await MockERC20.new(holder, 10);
+      saleToken = await MockERC20.new(buyer, 1000);
+      option = await Option.new(holder, 0, settlementToken.address, tenETH, 1000, expiration, { from: writer, value: tenETH });
     });
 
-    xit('should allow buyer to take posession', async () => {
+    it('should create holder proxy', async () => {
+      holderProxy = await HolderProxy.new({ from: holder });
     });
+
+    it('should allow holder to set a price', async () => {
+      holderProxy.setTransferPrice(saleToken.address, 10, { from: holder });
+    });
+
+    it('should allow holder to set the option', async () => {
+      await holderProxy.setOption( option.address, { from: holder });
+    });
+
+    it('should allow holder to set the option holder', async () => {
+      await option.setHolder(holderProxy.address, { from: holder });
+      (await option.holder()).should.be.eq(holderProxy.address);
+    });
+
+    it('should not allow buyer to send ETH instead of ERC20', async () => {
+      await expectThrow(holderProxy.buy({ from: buyer, tenETH }));
+      (await option.holder()).should.be.eq(holderProxy.address);
+    });
+
+    it('should not allow buyer to take posession with insufficient funds', async () => {
+      await saleToken.approve(holderProxy.address, 9, { from: buyer });
+      await expectThrow(holderProxy.buy({ from: buyer }));
+      (await option.holder()).should.be.eq(holderProxy.address);
+    });
+
+    it('should allow buyer to take posession with ERC20 allowance', async () => {
+      await saleToken.approve(holderProxy.address, 10, { from: buyer });
+      await holderProxy.buy({ from: buyer });
+      (await option.holder()).should.be.eq(buyer);
+    });
+
+    it('should allow recycling!', async () => {
+      // But really, the holder should be able to re-use a HolderProxy
+      // for different options contracts.
+      // Here, buyer and holder give everything back manually.
+      await option.setHolder(holder, { from: buyer });
+      (await option.holder()).should.be.eq(holder);
+      await saleToken.transfer(buyer, 10, { from: holder });
+    });
+
+
   });
 });
 
