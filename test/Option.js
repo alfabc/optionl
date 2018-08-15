@@ -18,9 +18,6 @@ contract('Option', (accounts) => {
   const rando = accounts[2];
   const tenETH = new web3.BigNumber(web3.toWei(10, 'ether'));
 
-  before(async () => {
-  });
-
   context('offer ETH for ERC20 token', () => {
     let option;
     let settlementToken;
