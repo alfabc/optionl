@@ -138,7 +138,7 @@ contract('Holder', (accounts) => {
       (await option.holder()).should.be.eq(buyer);
     });
 
-    it('should not take more of ERC20 allowance than price', async () => {
+    it('should take only price from the ERC20 approval allowance', async () => {
       // reset again
       await option.setHolder(holderProxy.address, { from: buyer });
       await saleToken.transfer(buyer, 1000, { from: holder });
@@ -151,19 +151,26 @@ contract('Holder', (accounts) => {
       (await saleToken.balanceOf(buyer)).toNumber().should.be.eq(100);
     });
 
-    it('should not take more of ERC20 transfer balance than price', async () => {
+    it('should not work with mix of ERC transfer balance and approval allowance', async () => {
       // reset again
       await option.setHolder(holderProxy.address, { from: buyer });
       await saleToken.transfer(buyer, 1000, { from: holder });
-      // transfer 900
+      // there are still 100 left over in the ERC20 approval allowance from last time
+      (await saleToken.allowance(buyer, holderProxy.address)).toNumber().should.be.eq(100);
+      // transfer 900 more to make up the difference, for a total of 1000
       await saleToken.transfer(holderProxy.address, 900, { from: buyer });
-      // fails because an allowance still exists from the last one.
+      // but this fails because you cannot cross the streams.
       await expectThrow(holderProxy.buy({ from: buyer }));
+    });
+
+    it('should require sufficient ERC20 transfer balance', async () => {
       // clear out pending approval
       await saleToken.approve(holderProxy.address, 0, { from: buyer });
-      // This tests that you can't have a mixture of allowances and transfers,
-      // as it doesn't work with both at once.
+      // this fails because 900 is not enough.
       await expectThrow(holderProxy.buy({ from: buyer }));
+    });
+
+    it('should not take excess ERC20 transfer balance', async () => {
       // Transfer the other 200
       await saleToken.transfer(holderProxy.address, 200, { from: buyer });
       // succeeds when excess transfer balance available
