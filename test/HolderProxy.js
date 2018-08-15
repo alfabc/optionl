@@ -85,7 +85,7 @@ contract('Holder', (accounts) => {
 
     it('should create option', async () => {
       settlementToken = await MockERC20.new(holder, 10);
-      saleToken = await MockERC20.new(buyer, 1000);
+      saleToken = await MockERC20.new(buyer, 1100);
       option = await Option.new(holder, 0, settlementToken.address, tenETH, 1000, expiration, { from: writer, value: tenETH });
     });
 
@@ -94,7 +94,7 @@ contract('Holder', (accounts) => {
     });
 
     it('should allow holder to set a price', async () => {
-      holderProxy.setTransferPrice(saleToken.address, 10, { from: holder });
+      holderProxy.setTransferPrice(saleToken.address, 1000, { from: holder });
     });
 
     it('should allow holder to set the option', async () => {
@@ -112,13 +112,13 @@ contract('Holder', (accounts) => {
     });
 
     it('should not allow buyer to take posession with insufficient funds', async () => {
-      await saleToken.approve(holderProxy.address, 9, { from: buyer });
+      await saleToken.approve(holderProxy.address, 900, { from: buyer });
       await expectThrow(holderProxy.buy({ from: buyer }));
       (await option.holder()).should.be.eq(holderProxy.address);
     });
 
     it('should allow buyer to take posession with ERC20 allowance', async () => {
-      await saleToken.approve(holderProxy.address, 10, { from: buyer });
+      await saleToken.approve(holderProxy.address, 1000, { from: buyer });
       await holderProxy.buy({ from: buyer });
       (await option.holder()).should.be.eq(buyer);
     });
@@ -126,16 +126,47 @@ contract('Holder', (accounts) => {
     it('should allow recycling!', async () => {
       // But really, the holder should be able to re-use a HolderProxy
       // for different options contracts.
-      // Here, buyer and holder give everything back manually.
-      await option.setHolder(holder, { from: buyer });
-      (await option.holder()).should.be.eq(holder);
-      await saleToken.transfer(buyer, 10, { from: holder });
+      // Here, buyer gives everything back manually.
+      await option.setHolder(holderProxy.address, { from: buyer });
+      (await option.holder()).should.be.eq(holderProxy.address);
+      await saleToken.transfer(buyer, 1000, { from: holder });
     });
 
-    xit('should allow buyer to take posession with ERC20 transfer', async () => {
-      await saleToken.approve(holderProxy.address, 10, { from: buyer });
+    it('should allow buyer to take posession with ERC20 transfer', async () => {
+      await saleToken.transfer(holderProxy.address, 1000, { from: buyer });
       await holderProxy.buy({ from: buyer });
       (await option.holder()).should.be.eq(buyer);
+    });
+
+    it('should not take more of ERC20 allowance than price', async () => {
+      // reset again
+      await option.setHolder(holderProxy.address, { from: buyer });
+      await saleToken.transfer(buyer, 1000, { from: holder });
+      // approve 1100
+      await saleToken.approve(holderProxy.address, 1100, { from: buyer });
+      // execute
+      await holderProxy.buy({ from: buyer });
+      (await option.holder()).should.be.eq(buyer);
+      (await saleToken.balanceOf(holder)).toNumber().should.be.eq(1000);
+      (await saleToken.balanceOf(buyer)).toNumber().should.be.eq(100);
+    });
+
+    it('should not take more of ERC20 transfer balance than price', async () => {
+      // reset again
+      await option.setHolder(holderProxy.address, { from: buyer });
+      await saleToken.transfer(buyer, 1000, { from: holder });
+      // transfer 1100
+      await saleToken.transfer(holderProxy.address, 1100, { from: buyer });
+      // fails because an allowance still exists from the last one.
+      // This tests that you can't have a mixture of allowances and transfers.
+      await expectThrow(holderProxy.buy({ from: buyer }));
+      // clear out pending approval
+      await saleToken.approve(holderProxy.address, 0, { from: buyer });
+      // succeeds
+      await holderProxy.buy({ from: buyer });
+      (await option.holder()).should.be.eq(buyer);
+      (await saleToken.balanceOf(holder)).toNumber().should.be.eq(1000);
+      (await saleToken.balanceOf(holderProxy.address)).toNumber().should.be.eq(100);
     });
   });
 });

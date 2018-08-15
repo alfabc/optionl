@@ -26,6 +26,11 @@ contract HolderProxy {
     settlementAmount = _settlementAmount;
   }
 
+  // Send ETH for price (if in ETH)
+  // Send ERC20 tokens for price (if in ERC20) via
+  //   * ERC20.approve allowance (if any)
+  //   * ERC20.transfer balance
+  // ... but not both.
   function buy() external payable {
     if (settlementContract == ERC20(0)) {
       require(settlementAmount == msg.value, "incorrect amount");
@@ -33,8 +38,13 @@ contract HolderProxy {
     } else {
       require(msg.value == 0, "ERC20 only");
       uint allowance = settlementContract.allowance(msg.sender, address(this));
-      require(settlementAmount == allowance, "incorrect amount");
-      settlementContract.transferFrom(msg.sender, holder, allowance);
+      if (allowance > 0) {
+        require(settlementAmount <= allowance, "incorrect amount");
+        settlementContract.transferFrom(msg.sender, holder, settlementAmount);
+      } else {
+        require(settlementAmount <= settlementContract.balanceOf(address(this)), "incorrect amount");
+        settlementContract.transfer(holder, settlementAmount);
+      }
     }
     option.setHolder(msg.sender);
   }
