@@ -15,6 +15,10 @@ contract Option is OptionInterface {
   uint256 public expiration; // time at which option expires
   bool public funded;
 
+  // error messages
+  string constant EXPIRED = "expired";
+  string constant SENDER_NOT_AUTHORIZED = "Sender not authorized";
+
   // create a new option, sending in the parameters
   // The caller is the writer, by definition
   constructor(
@@ -62,10 +66,10 @@ contract Option is OptionInterface {
     require(funded, "not funded");
 
     // Note: block timestamps are potentially manipulable
-    require(expiration > block.timestamp, "expired"); // solium-disable-line security/no-block-members
+    require(expiration > block.timestamp, EXPIRED); // solium-disable-line security/no-block-members
 
     // Only holder may call
-    require(msg.sender == holder, "Sender not authorized");
+    require(msg.sender == holder, "SENDER_NOT_AUTHORIZED ");
 
     uint256 remainingDepositAmount = 0;
     
@@ -110,7 +114,7 @@ contract Option is OptionInterface {
 
   // called by the writer to recover deposited funds after expiration
   function recoverDeposit() external {
-    require(msg.sender == writer, "Sender not authorized");
+    require(msg.sender == writer, "SENDER_NOT_AUTHORIZED ");
 
     // Note: block timestamps are potentially manipulable
     require(expiration <= block.timestamp, "not expired"); // solium-disable-line security/no-block-members
@@ -130,7 +134,7 @@ contract Option is OptionInterface {
     require(!funded, "already funded");
 
     // Note: block timestamps are potentially manipulable
-    require(expiration > block.timestamp, "expired"); // solium-disable-line security/no-block-members
+    require(expiration > block.timestamp, EXPIRED); // solium-disable-line security/no-block-members
 
     uint256 newBalance;
 

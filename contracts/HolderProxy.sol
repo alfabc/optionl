@@ -18,6 +18,10 @@ contract HolderProxy {
   uint public settlementAmount;
   OptionInterface public option;
 
+  // error messages
+  string constant HOLDER_ONLY = "holder only";
+  string constant INCORRECT_AMOUNT = "incorrect amount";
+
   // Create holder proxy, setting the holder to the creator
   constructor() public {
     holder = msg.sender;
@@ -25,14 +29,14 @@ contract HolderProxy {
 
   // Set the contract on which the proxy operates
   function setOption(OptionInterface _option) external {
-    require(holder == msg.sender, "holder only");
+    require(holder == msg.sender, HOLDER_ONLY);
     option = _option;
   }
 
   // Set the contract and amount required for transfer of the contract
   // If _settlementContract is zero, means ETH since ETH has no contract
   function setTransferPrice(ERC20 _settlementContract, uint _settlementAmount) external {
-    require(holder == msg.sender, "holder only");
+    require(holder == msg.sender, HOLDER_ONLY);
     settlementContract = _settlementContract;
     settlementAmount = _settlementAmount;
   }
@@ -47,7 +51,7 @@ contract HolderProxy {
   function buy() external payable {
     // For ETH, the contract is null
     if (settlementContract == ERC20(0)) {
-      require(settlementAmount == msg.value, "incorrect amount");
+      require(settlementAmount == msg.value, INCORRECT_AMOUNT);
       holder.transfer(msg.value);
     } else {
       // For ERC-20
@@ -55,12 +59,12 @@ contract HolderProxy {
       uint allowance = settlementContract.allowance(msg.sender, address(this));
       // If *any* allowance is approved, there must be sufficient.
       if (allowance > 0) {
-        require(settlementAmount <= allowance, "incorrect amount");
+        require(settlementAmount <= allowance, INCORRECT_AMOUNT);
         // transfer only the settlement amount from the buyer to the holder
         settlementContract.transferFrom(msg.sender, holder, settlementAmount);
       } else {
         // If there is no allowance, look for transfer balance
-        require(settlementAmount <= settlementContract.balanceOf(address(this)), "incorrect amount");
+        require(settlementAmount <= settlementContract.balanceOf(address(this)), INCORRECT_AMOUNT);
         // transfer only the settlement amount from the contract balance
         // to the holder
         settlementContract.transfer(holder, settlementAmount);
